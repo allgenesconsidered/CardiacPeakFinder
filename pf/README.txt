@@ -6,7 +6,7 @@ How to use:
 - Call analyzeExperiment(dataframe) where dataframe is your data, with the
 first column containing the ‘Time’ and all other columns containing
 samples.
-- Call runTest(dataframe) to output a graph to check that the data looks
+- Call runTestGraph(dataframe) to output a graph to check that the data looks
 ok:
 	Green = peak calls
 	Red = minimum calls
