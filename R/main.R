@@ -1,4 +1,3 @@
-
 if(!file.exists("./data/CaHandUT1.csv")){
   dat <- read.csv("./data/Experiment-03.csv", stringsAsFactors = F)
   dat <- dat[-1,]
@@ -84,24 +83,6 @@ getIntensityMids <- function(list, peaks = findPeaks(list), mins = findMins(list
     }
   }
   return(mids)
-}
-
-calcualteBPM <- function(listInt, listTime){ # Number of peaks per second
-  peaks = findPeaks(listInt)
-  time = listTime[peaks[length(peaks)]] - listTime[peaks[1]]
-  return(length(peaks)/time * 1000 * 60)
-}
-
-calcualteT50 <- function(listTime, peaks, mids, left = T){
-  t50s = c()
-  if(!left) peaks = peaks[-1]
-  for(i in 1:length(peaks)){
-    if(!is.na(peaks[i]) && !is.na(mids[i])){
-      if(left) t50s = c(t50s, listTime[mids[i]] - listTime[peaks[i]])
-      else t50s = c(t50s, listTime[peaks[i]] - listTime[mids[i]])
-    }
-  }
-  return(t50s)
 }
 
 detectError <- function(listTime){

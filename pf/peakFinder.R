@@ -14,7 +14,7 @@ findPeaks <- function(list, alpha = 0.01, returnValue = F){
       if(list[i] < mean(list)) next
       else if(list[i] > currentMax) currentMax = list[i]
       else if(list[i] < currentMax){
-        j = 
+        j =
           peaks = c(peaks, which(list == max(list[(i-pRange):(i+pRange)]))) # Take the top of the peak, incase the peak is noisy
         findingPeak = F
       }
@@ -62,7 +62,7 @@ findMids <- function(list, peaks = findPeaks(list), mins = findMins(list), right
     if(!is.na(lIndex[i]) && !is.na(rIndex[i])){
       range = list[lIndex[i]:rIndex[i]]
       midVal = (list[lIndex[i]] + list[rIndex[i]])/2
-      mids = c(mids, (which(abs(range - midVal) == min(abs(range - midVal)))) + lIndex[i]) 
+      mids = c(mids, (which(abs(range - midVal) == min(abs(range - midVal)))) + lIndex[i])
     }
   }
   return(mids)
@@ -120,32 +120,61 @@ detectTimeErrors <- function(listTime){
 detectRunErrors <- function(list){
   for( i in 1:length(list)){
     if(list[i] < 75 || list[i] > 700){
-      cat("Error: Excessive intensity detected at index", i ,'.\n')
-      return(T)
+      cat("Caution: Erronious intensity detected at index ", i ,'.\n', sep = '')
+      return(i)
     }
   }
   return(F)
 }
 
+attemptPatch <- function(list, index){
+  tryCatch({
+    list[index] = mean(list[index + 1], list[index - 1])
+    cat("Patching Sucessfull!\n")
+    return(list)
+  }, error = function(e) {
+    cat("Patching failed.\n")
+    print(e)
+    if(errorPrompt()){
+      cat("Sample skipped\n")
+      return(T)
+    } else {
+      cat("Error not skipped\n")
+      return(F)
+    }
+  })
+    return(NA)
+}
+
 errorPrompt <- function(){
   while(T){
-    responce <- readline(prompt="Include in analysis [y/n]: ")
+    responce <- readline(prompt="Include in analysis? [y/n]: ")
     if(responce == 'n') return(T)
     else if(responce =='y') return(F)
   }
 }
+
+fullTest <- function(list){
+  test <- detectRunErrors(list)
+  if(is.numeric(test)){
+    cat(prompt="Attempting fix.\n")
+    fix = attemptPatch(list, test)
+    return(fix)
+  } else return(test)
+}
+
 ##############################
 ########## Testing ###########
 ##############################
 
-runTest <- function(dat = read.csv("./data/CAHandUT1.csv")){
-  detectTimeErrors(dat$Time)
-  
+runTestGraph <- function(dat = read.csv("./data/CAHandUT1.csv")){
+  time = dat[,1]
+  detectTimeErrors(time)
+
   for( i in 2:ncol(dat)){
-    time = dat$Time
     sample = dat[,i]
-    title =  paste0('Untreated CM 122 2.0mM : ', i-1)
-    
+    title =  paste0('Test on ', colnames(dat)[i])
+
     plot(time, sample, type = 'l', col = 'blue',
          main = title, ylab = "Intensity",
          xlab = "Time (miliseconds)")
@@ -168,11 +197,11 @@ runTest <- function(dat = read.csv("./data/CAHandUT1.csv")){
 }
 
 analyzeExperiment <- function(dat){
-  
+
   if(colnames(dat)[1] != "Time"){
     return('Error: Please name the fist column Time')
   }
-  time = dat$Time
+  time = dat[,1]
   detectTimeErrors(time)
   output = data.frame(Peaks.Ave = numeric(0),
                       Mins.Ave = numeric(0),
@@ -184,8 +213,11 @@ analyzeExperiment <- function(dat){
   for( i in 2:ncol(dat)){
     cat('Checking sample', colnames(dat)[i],'\n')
     sample = dat[,i]
-    if(detectRunErrors(sample)){
-      if(errorPrompt()) next
+    test = fullTest(sample)
+    if(is.logical(test)){
+      if(test) next
+    } else if(is.vector(test)){
+      sample <- test
     }
     peaks = findPeaks(sample)
     peak = mean(indexesToValues(sample, peaks))
@@ -194,11 +226,11 @@ analyzeExperiment <- function(dat){
     rightT50 = calcualteT50(time, peaks, findMids(sample))
     leftT50 = calcualteT50(time, peaks, findMids(sample, right = F), right = F)
     bpm = calcualteBPM(sample, time)
-    output <- rbind(output , c(peak , min, (peak - min),
+    output <- rbind(output , c(peak , min, (peak/min),
                                mean(rightT50), mean(leftT50), bpm))
   }
-  colnames(output) <- c('Peak (Ave)','Min (Ave)', 'F/Fn (Ave)',
-                        'RightT50 (Ave)', 'LeftT50 (Ave)', 'BPM')
+  colnames(output) <- c('Peak (AU)','Min (AU)', 'F/Fn (Amplitude)',
+                        'RightT50 (ms)', 'LeftT50 (ms)', 'BPM')
   return(output)
 }
 
