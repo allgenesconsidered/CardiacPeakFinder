@@ -42,7 +42,7 @@ As you can see above, all columns are of **type** numeric (**num**). Looking a t
 
 ## Analysis
 
-The main functions are *runTestGraph()* and *analyzeExperiemnt()*. You can call runTest() on you dataset to see how the function calls each peak.
+The main functions are *runTestGraph()* and *analyzeExperiemnt()*. You can call runTestGraph() on you dataset to see how the function calls each peak.
   
 The result will be a graph of the GcAMP flow including dots coorisponding to where the algorithm calls certain fetures. This includes:
   
