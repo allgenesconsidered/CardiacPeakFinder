@@ -4,18 +4,26 @@
 
 
 findPeaks <- function(list, alpha = 0.01, returnValue = F){
+  # A funciton to identify peaks in beating GcAMP cells.
+  # Argunments :
+  #     - list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
+  #     - alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
+  #     - returnValue : Boolean whether or not to return indexes or intensity values.
+  # Return  :
+  #   Returns a vector of either indexes or intensity values coorisponding to peaks
+
   peaks = c()
-  pRange = length(list)*alpha
+  pRange = length(list) * alpha
   currentMax = 0
-  if(list[1] > mean(list)) findingPeak = F
+  if(list[1] > mean(list)) findingPeak = F # If the data starts above the mean
   else findingPeak = T
   for(i in 1:length(list)){ # for every element (which we'll call i) in the list
     if (findingPeak){
       if(list[i] < mean(list)) next
       else if(list[i] > currentMax) currentMax = list[i]
       else if(list[i] < currentMax){
-        j =
-          peaks = c(peaks, which(list == max(list[(i-pRange):(i+pRange)]))) # Take the top of the peak, incase the peak is noisy
+        peaks = c(peaks, which(list == max(list[(i-pRange):(i+pRange)])))
+        # ^Take the max of the area, incase the peak is noisy
         findingPeak = F
       }
     } else {
@@ -31,6 +39,15 @@ findPeaks <- function(list, alpha = 0.01, returnValue = F){
 }
 
 findMins <- function(list, peaks = findPeaks(list), returnValue = F){
+  # A funciton to identify minimal values between peaks (troughs).
+  # Argunments :
+  #     - list  : A list of GcAMP intensity values coorisponding to n experiemntal run.
+  #     - peaks : Index values coorisponding to peaks. Will run fundPeaks() if nothing given.
+  #     - returnValue : Boolean whether or not to return indexes or intensity values.
+  # Return  :
+  #   Returns a vector of either indexes or intensity values coorisponding to minimal values. It will
+  #   only look for minimal values between peaks, so nothing should be showing up before the index of
+  #   the first peak.
   mins = c()
   for(i in 1:(length(peaks))){
     peak1 = peaks[i]
@@ -48,8 +65,15 @@ findMins <- function(list, peaks = findPeaks(list), returnValue = F){
 
 
 findMids <- function(list, peaks = findPeaks(list), mins = findMins(list), right = T){
-  # Gets the middle value (mean of peak intensity and minmum).
-  # right : A boolean whether to take the right mid (for calculating decay time). False for right mid (peak time).
+  # A funciton to identify minimal values between peaks (troughs).
+  # Argunments :
+  #     - list  : A list of GcAMP intensity values coorisponding to n experiemntal run.
+  #     - peaks : Index values coorisponding to peaks. Will run fundPeaks() if nothing given.
+  #     - returnValue : Boolean whether or not to return indexes or intensity values.
+  # Return  :
+  #   Returns a vector of either indexes or intensity values coorisponding to minimal values. It will
+  #   only look for minimal values between peaks, so nothing should be showing up before the index of
+  #   the first peak.
   mids = c()
   if(right){
     lIndex = peaks
@@ -175,23 +199,23 @@ runTestGraph <- function(dat = read.csv("./data/CAHandUT1.csv")){
     sample = dat[,i]
     title =  paste0('Test on ', colnames(dat)[i])
 
-    plot(time, sample, type = 'l', col = 'blue',
+    plot(time, sample, type = 'l', col = 'steelblue',
          main = title, ylab = "Intensity",
          xlab = "Time (miliseconds)")
     abline(h = mean(sample), col = 'grey')
     peaks = findPeaks(sample)
     mins = findMins(sample, peaks)
     for(i in peaks){
-      points(x = dat[i,1], y = sample[i], col = 'green', pch = '*')
+      points(x = dat[i,1], y = sample[i], col = 'forestgreen', pch = 16)
     }
     for(i in mins){
-      points(x = dat[i,1], y = sample[i], col = 'red', pch = '*')
+      points(x = dat[i,1], y = sample[i], col = 'red', pch = 16)
     }
     for(i in findMids(sample, peaks, mins)){
-      points(x = dat[i,1], y = sample[i], col = 'purple', pch = 4)
+      points(x = dat[i,1], y = sample[i], col = 'purple', pch = 16)
     }
     for(i in findMids(sample, peaks, mins, right = F)){
-      points(x = dat[i,1], y = sample[i], col = 'orange', pch = 4)
+      points(x = dat[i,1], y = sample[i], col = 'orange', pch = 16)
     }
   }
 }
