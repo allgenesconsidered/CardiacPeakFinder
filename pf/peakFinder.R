@@ -3,15 +3,13 @@
 ##############################
 
 
+#' A funciton to identify peaks in beating GcAMP cells.
+#'
+#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
+#' @param alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
+#' @param returnValue : Boolean whether or not to return indexes or intensity values.
+#' @return  A vector of either indexes or intensity values coorisponding to peaks
 findPeaks <- function(list, alpha = 0.01, returnValue = F){
-  # A funciton to identify peaks in beating GcAMP cells.
-  # Argunments :
-  #     - list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
-  #     - alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
-  #     - returnValue : Boolean whether or not to return indexes or intensity values.
-  # Return  :
-  #   Returns a vector of either indexes or intensity values coorisponding to peaks
-
   peaks = c()
   pRange = length(list) * alpha
   currentMax = 0
@@ -35,19 +33,17 @@ findPeaks <- function(list, alpha = 0.01, returnValue = F){
     }
   }
   if(returnValue) return(indexesToValues(list, peaks))
-  return(peaks)
+  else return(peaks)
 }
 
+#' A funciton to identify minimal values between peaks (troughs).
+#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
+#' @param peaks : Index values coorisponding to peaks. Will run findPeaks() if nothing given.
+#' @param returnValue : Boolean whether or not to return indexes or intensity values.
+#' @return Returns a vector of either indexes or intensity values coorisponding to minimal values. It will
+#'   only look for minimal values between peaks, so nothing should be showing up before the index of
+#'   the first peak.
 findMins <- function(list, peaks = findPeaks(list), returnValue = F){
-  # A funciton to identify minimal values between peaks (troughs).
-  # Argunments :
-  #     - list  : A list of GcAMP intensity values coorisponding to n experiemntal run.
-  #     - peaks : Index values coorisponding to peaks. Will run fundPeaks() if nothing given.
-  #     - returnValue : Boolean whether or not to return indexes or intensity values.
-  # Return  :
-  #   Returns a vector of either indexes or intensity values coorisponding to minimal values. It will
-  #   only look for minimal values between peaks, so nothing should be showing up before the index of
-  #   the first peak.
   mins = c()
   for(i in 1:(length(peaks))){
     peak1 = peaks[i]
@@ -60,20 +56,18 @@ findMins <- function(list, peaks = findPeaks(list), returnValue = F){
     }
   }
   if(returnValue) return(indexesToValues(list, mins))
-  return(mins)
+  else return(mins)
 }
 
-
+#' A funciton to identify midpoints (T50) between peaks and troughs. Only the mid points between .
+#' Argunments :
+#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
+#' @param peaks : Index values coorisponding to peaks. Will run findPeaks() if nothing given.
+#' @param mins : Intex values coorisponding to troughs. Will run findMins() if nothing given.
+#' @return Returns a vector of indexes coorisponding to T50 values. It will only look for T50
+#'   values between peaks and troughs, so nothing should be showing up before the index of
+#'   the first peak or after the index of the last peak.
 findMids <- function(list, peaks = findPeaks(list), mins = findMins(list), right = T){
-  # A funciton to identify minimal values between peaks (troughs).
-  # Argunments :
-  #     - list  : A list of GcAMP intensity values coorisponding to n experiemntal run.
-  #     - peaks : Index values coorisponding to peaks. Will run fundPeaks() if nothing given.
-  #     - returnValue : Boolean whether or not to return indexes or intensity values.
-  # Return  :
-  #   Returns a vector of either indexes or intensity values coorisponding to minimal values. It will
-  #   only look for minimal values between peaks, so nothing should be showing up before the index of
-  #   the first peak.
   mids = c()
   if(right){
     lIndex = peaks
@@ -112,6 +106,16 @@ calcualteT50 <- function(listTime, peaks, mids, right = T){
     }
   }
   return(t50s)
+}
+
+calculateVelocity <- function(listInt, listTime, midsIndex){
+  vel = c()
+  for(i in midsIndex){
+    x = c(listInt[i], listInt[i+1])
+    y = c(listTime[i], listTime[i+1])
+    vel = c(vel, diff(x)/diff(y))
+  }
+  return(vel)
 }
 
 indexesToValues <- function(list, indexes){
@@ -230,8 +234,10 @@ analyzeExperiment <- function(dat){
   output = data.frame(Peaks.Ave = numeric(0),
                       Mins.Ave = numeric(0),
                       FoverFn.Ave = numeric(0),
-                      rightT50.ave = numeric(0),
-                      leftT50.ave = numeric(0),
+                      rightT50.Ave = numeric(0),
+                      rightVel.Ave = numeric(0),
+                      leftT50.Ave = numeric(0),
+                      leftVel.Ave = numeric(0),
                       BPM = numeric(0)
                       )
   for( i in 2:ncol(dat)){
@@ -247,14 +253,20 @@ analyzeExperiment <- function(dat){
     peak = mean(indexesToValues(sample, peaks))
     mins = findMins(sample)
     min = mean(indexesToValues(sample, mins))
-    rightT50 = calcualteT50(time, peaks, findMids(sample))
-    leftT50 = calcualteT50(time, peaks, findMids(sample, right = F), right = F)
+    midsR = findMids(sample)
+    midsL = findMids(sample, right = F)
+    rightT50 = calcualteT50(time, peaks, midsR)
+    rightVelocity = calculateVelocity(sample, time, midsR)
+    leftT50 = calcualteT50(time, peaks, midsL, right = F)
+    leftVelocity = calculateVelocity(sample, time, midsL)
     bpm = calcualteBPM(sample, time)
     output <- rbind(output , c(peak , min, (peak/min),
-                               mean(rightT50), mean(leftT50), bpm))
+                               mean(rightT50), mean(rightVelocity), mean(leftT50),
+                              mean(leftVelocity) ,bpm))
   }
   colnames(output) <- c('Peak (AU)','Min (AU)', 'F/Fn (Amplitude)',
-                        'RightT50 (ms)', 'LeftT50 (ms)', 'BPM')
+                        'RightT50 (ms)', 'Right Velocity', 'LeftT50 (ms)',
+                        'Left Velocity', 'BPM')
   return(output)
 }
 

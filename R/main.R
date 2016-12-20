@@ -24,8 +24,7 @@ findPeaks <- function(list, alpha = 0.01){
       if(list[i] < mean(list)) next
       else if(list[i] > currentMax) currentMax = list[i]
       else if(list[i] < currentMax){
-        j =
-          peaks = c(peaks, which(list == max(list[(i-pRange):(i+pRange)]))) # Take the top of the peak, incase the peak is noisy
+        peaks = c(peaks, which(list == max(list[(i-pRange):(i+pRange)]))) # Take the top of the peak, incase the peak is noisy
         findingPeak = F
       }
     } else {
