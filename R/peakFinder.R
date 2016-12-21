@@ -130,6 +130,10 @@ indexesToValues <- function(list, indexes){
 ####### Error Checking ########
 ###############################
 
+checkTime <- function(listTime){
+  return(all(diff(listTime) >= 0))
+}
+
 detectTimeErrors <- function(listTime){
   nErrors = 0
   for(i in 1:(length(listTime)-1)){
@@ -231,17 +235,17 @@ analyzeExperiment <- function(dat){
   }
   time = dat[,1]
   detectTimeErrors(time)
-  output = data.frame(Peaks.Ave = numeric(0),
-                      Mins.Ave = numeric(0),
-                      FoverFn.Ave = numeric(0),
-                      rightT50.Ave = numeric(0),
-                      rightVel.Ave = numeric(0),
-                      leftT50.Ave = numeric(0),
-                      leftVel.Ave = numeric(0),
+  output = data.frame(Peaks_Ave = numeric(0),
+                      Mins_Ave = numeric(0),
+                      FoverFn_Ave = numeric(0),
+                      rightT50_Ave = numeric(0),
+                      rightVel_Ave = numeric(0),
+                      leftT50_Ave = numeric(0),
+                      leftVel_Ave = numeric(0),
                       BPM = numeric(0)
                       )
   for( i in 2:ncol(dat)){
-    cat('Checking sample', colnames(dat)[i],'\n')
+    #cat('Checking sample', colnames(dat)[i],'\n')
     sample = dat[,i]
     test = fullTest(sample)
     if(is.logical(test)){
@@ -267,6 +271,6 @@ analyzeExperiment <- function(dat){
   colnames(output) <- c('Peak (AU)','Min (AU)', 'F/Fn (Amplitude)',
                         'RightT50 (ms)', 'Right Velocity', 'LeftT50 (ms)',
                         'Left Velocity', 'BPM')
-  return(output)
+  return(round(output,3))
 }
 
