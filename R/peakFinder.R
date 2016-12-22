@@ -67,9 +67,9 @@ findMins <- function(list, peaks = findPeaks(list), returnValue = F){
 #' @return Returns a vector of indexes coorisponding to T50 values. It will only look for T50
 #'   values between peaks and troughs, so nothing should be showing up before the index of
 #'   the first peak or after the index of the last peak.
-findMids <- function(list, peaks = findPeaks(list), mins = findMins(list), right = T){
+findMids <- function(list, peaks = findPeaks(list), mins = findMins(list), Downstroke = T){
   mids = c()
-  if(right){
+  if(Downstroke){
     lIndex = peaks
     rIndex = mins
   } else{
@@ -96,12 +96,12 @@ calcualteBPM <- function(listInt, listTime){ # Number of peaks per second
   return(length(peaks)/time * 1000 * 60)
 }
 
-calcualteT50 <- function(listTime, peaks, mids, right = T){
+calcualteT50 <- function(listTime, peaks, mids, Downstroke = T){
   t50s = c()
-  if(!right) peaks = peaks[-1]
+  if(!Downstroke) peaks = peaks[-1]
   for(i in 1:length(peaks)){
     if(!is.na(peaks[i]) && !is.na(mids[i])){
-      if(right) t50s = c(t50s, listTime[mids[i]] - listTime[peaks[i]])
+      if(Downstroke) t50s = c(t50s, listTime[mids[i]] - listTime[peaks[i]])
       else t50s = c(t50s, listTime[peaks[i]] - listTime[mids[i]])
     }
   }
@@ -222,7 +222,7 @@ runTestGraph <- function(dat = read.csv("./data/CAHandUT1.csv")){
     for(i in findMids(sample, peaks, mins)){
       points(x = dat[i,1], y = sample[i], col = 'purple', pch = 16)
     }
-    for(i in findMids(sample, peaks, mins, right = F)){
+    for(i in findMids(sample, peaks, mins, Downstroke = F)){
       points(x = dat[i,1], y = sample[i], col = 'orange', pch = 16)
     }
   }
@@ -238,10 +238,10 @@ analyzeExperiment <- function(dat){
   output = data.frame(Peaks_Ave = numeric(0),
                       Mins_Ave = numeric(0),
                       FoverFn_Ave = numeric(0),
-                      rightT50_Ave = numeric(0),
-                      rightVel_Ave = numeric(0),
-                      leftT50_Ave = numeric(0),
-                      leftVel_Ave = numeric(0),
+                      DownstrokeT50_Ave = numeric(0),
+                      DownstrokeVel_Ave = numeric(0),
+                      UpstrokeT50_Ave = numeric(0),
+                      UpstrokeVel_Ave = numeric(0),
                       BPM = numeric(0)
                       )
   for( i in 2:ncol(dat)){
@@ -257,20 +257,20 @@ analyzeExperiment <- function(dat){
     peak = mean(indexesToValues(sample, peaks))
     mins = findMins(sample)
     min = mean(indexesToValues(sample, mins))
-    midsR = findMids(sample)
-    midsL = findMids(sample, right = F)
-    rightT50 = calcualteT50(time, peaks, midsR)
-    rightVelocity = calculateVelocity(sample, time, midsR)
-    leftT50 = calcualteT50(time, peaks, midsL, right = F)
-    leftVelocity = calculateVelocity(sample, time, midsL)
+    midsDown = findMids(sample)
+    midsUp = findMids(sample, Downstroke = F)
+    DownstrokeT50 = calcualteT50(time, peaks, midsDown)
+    DownstrokeVelocity = calculateVelocity(sample, time, midsDown)
+    UpstrokeT50 = calcualteT50(time, peaks, midsUp, Downstroke = F)
+    UpstrokeVelocity = calculateVelocity(sample, time, midsUp)
     bpm = calcualteBPM(sample, time)
     output <- rbind(output , c(peak , min, (peak/min),
-                               mean(rightT50), mean(rightVelocity), mean(leftT50),
-                              mean(leftVelocity) ,bpm))
+                               mean(DownstrokeT50), mean(DownstrokeVelocity), mean(UpstrokeT50),
+                              mean(UpstrokeVelocity) ,bpm))
   }
   colnames(output) <- c('Peak (AU)','Min (AU)', 'F/Fn (Amplitude)',
-                        'RightT50 (ms)', 'Right Velocity', 'LeftT50 (ms)',
-                        'Left Velocity', 'BPM')
+                        'Upstroke T50 (ms)', 'Upstroke Velocity', 'Downstroke T50 (ms)',
+                        'Downstroke Velocity', 'BPM')
   return(round(output,3))
 }
 
