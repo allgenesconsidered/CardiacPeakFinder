@@ -2,7 +2,9 @@
 title: "Examples With Peak Finder Script"
 author: "Michael Olvera"
 date: "September 8, 2016"
-output: pdf_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +19,7 @@ Before starting, include the following line of code at the top
 of your script:
 
 ```{r source}
-source("pf/peakFinder.R")
+source("R/peakFinder.R")
 ```
 
 ## Preprocessing
@@ -27,7 +29,7 @@ included in column 1, and all other columns samples. A
 preprocessed dataset is included in the zip folder:
 
 ```{r exampleData}
-example <- read.csv('pf/data/CaHandUT1.csv')
+example <- read.csv('data/CaHandUT1.csv')
 head(example) # Prints first 6 rows
 ```
 
@@ -67,7 +69,7 @@ Looks like there is something wrong with the data. We can run the experiment and
 analyzeExperiment(example) 
 ```
 
-Looks like the first sample had a missing value at index 1025. The program thankfully fixed it automaticall. 
+Looks like the first sample had a missing value at index 1025. The program thankfully fixed it automatically. 
 
 The output can be saved, and extracted to be used in Excel/Prism. 
 
