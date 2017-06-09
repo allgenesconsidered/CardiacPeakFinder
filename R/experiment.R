@@ -14,16 +14,15 @@ source('./R/errorChecking.R')
 #' data : A matrix containing the intenity values for each measured point
 #' results : a list containing all measured data
 create_new_experiment <- function(){
-  v <- vector(mode='numeric')
   new_experiment <- list(
     names = vector(mode='character'),
     time = vector(mode='numeric'),
     data = data.frame(),
-    results = list(
-      peak = v, min = v, bpm = v,
-      FFn = v, dT50 = v, VmaxDown = v,
-      uT50 = v, VmaxUp = v
-    )
+    peaks = list(),
+    mins = list(),
+    midsDown = list(),
+    midsUp = list(),
+    results = NULL
   )
   class(new_experiment) <- 'experiment'
   return(new_experiment)
@@ -34,7 +33,7 @@ create_new_experiment <- function(){
 #' Designed to remove the empty "Marker" column, any empty rows after
 #' importing into R, and removing rows that do not contain mean
 #' intensity values
-read_zies_data <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
+readZiessData <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
   raw_dat <- read.csv(path_to_csv, header = T, stringsAsFactors = F)
   raw_dat <- raw_dat[-1,-2] # Remove empty
   time <- as.numeric(raw_dat[,time_index])
@@ -42,7 +41,7 @@ read_zies_data <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean
 }
 
 #' Converts a cleaned CSV to an experiment object.
-dataframe_to_experiment <- function(dataframe, timeIndex = 1){
+dataframeToExperiment <- function(dataframe, timeIndex = 1){
   experiment = create_new_experiment()
   stopifnot(fullTimeTest(dataframe[,timeIndex]))
   experiment$time = dataframe[,timeIndex]
@@ -75,7 +74,7 @@ moving_average <- function(x,n=5){
 
 #' Print function for experiement object
 print.experiment <- function(exp_obj){
-  cat('Name :',exp_obj$name,'\n')
+  cat('Data names :',exp_obj$name,'\n')
   cat('Experimental object with', length(exp_obj$time),
       'measurments and', ncol(exp_obj$data) ,'positions.\n')
 }
@@ -104,16 +103,15 @@ returnResults.experiment <- function(exp_obj){
   return(output)
 }
 
-plotSingleMeasurment <- function(exp_obj, i) {
-  sample = exp_obj$data[,i]
+plotSingleMeasurment <- function(exp_obj, name_of_column="all") {
+  sample = exp_obj$data
   title =  paste0('Test on ', colnames(exp_obj$data)[i])
 
   plot(exp_obj$time, sample, type = 'l', col = 'steelblue',
        main = title, ylab = "Intensity",
        xlab = "Time (miliseconds)")
   abline(h = mean(sample), col = 'grey')
-  peaks = findPeaks(sample)
-  mins = findMins(sample, peaks)
+
   for(i in peaks){
     points(x = exp_obj$time[i], y = sample[i], col = 'forestgreen', pch = 16)
   }

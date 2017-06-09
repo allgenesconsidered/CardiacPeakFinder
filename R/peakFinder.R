@@ -124,13 +124,11 @@ runTestGraph <- function(dat = read.csv("./data/CAHandUT1.csv")){
   }
 }
 
-analyzeExperiment <- function(dat){
+analyzeExperiment <- function(ex_obj, round_diget = 3){
 
-  if(colnames(dat)[1] != "Time"){
+  if(class(ex_obj) != "experiment"){
     return('Error: Please name the fist column Time')
   }
-  time = dat[,1]
-  detectTimeErrors(time)
   output = data.frame(Peaks_Ave = numeric(0),
                       Mins_Ave = numeric(0),
                       FoverFn_Ave = numeric(0),
@@ -139,34 +137,30 @@ analyzeExperiment <- function(dat){
                       UpstrokeT50_Ave = numeric(0),
                       UpstrokeVel_Ave = numeric(0),
                       BPM = numeric(0)
-                      )
-  for( i in 2:ncol(dat)){
-    #cat('Checking sample', colnames(dat)[i],'\n')
-    sample = dat[,i]
-    test = fullTest(sample)
-    if(is.logical(test)){
-      if(test) next
-    } else if(is.vector(test)){
-      sample <- test
-    }
-    peaks = findPeaks(sample)
-    peak = mean(indexesToValues(sample, peaks))
-    mins = findMins(sample)
-    min = mean(indexesToValues(sample, mins))
-    midsDown = findMids(sample)
-    midsUp = findMids(sample, Downstroke = F)
+  )
+  for( i in 1:ncol(ex_obj$data)){
+    n = ex_obj$names[i]
+    sample = ex_obj$data[,i]
 
-    DownstrokeT50 = calcualteT50(time, peaks, midsDown)
-    VmaxUp = findVmax(sample, time, peaks, mins, Decay = F)
-    UpstrokeT50 = calcualteT50(time, peaks, midsUp, Downstroke = F)
-    VmaxDecay = findVmax(sample, time, peaks, mins)
+    ex_obj$peaks[[n]] = findPeaks(sample)
+    peak_ave = mean(indexesToValues(sample, ex_obj$peaks[[n]]))
+    ex_obj$mins[[n]] = findMins(sample, ex_obj$peaks[[n]])
+    min_ave = mean(indexesToValues(sample, ex_obj$mins[[n]]))
+    ex_obj$midsDown[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]])
+    ex_obj$midsUp[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F)
 
-    bpm = calcualteBPM(sample, time)
-    output <- rbind(output , c(peak , min, (peak/min), mean(UpstrokeT50),
+    DownstrokeT50 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsDown[[n]])
+    VmaxUp = findVmax(sample, ex_obj$time, ex_obj$peaks[[n]], ex_obj$mins[[n]], Decay = F)
+    UpstrokeT50 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsUp[[n]], Downstroke = F)
+    VmaxDecay = findVmax(sample, ex_obj$time, ex_obj$peaks[[n]], ex_obj$mins[[n]])
+
+    bpm = calcualteBPM(sample, ex_obj$time)
+    output <- rbind(output , c(peak_ave , min_ave, (peak_ave/min_ave), mean(UpstrokeT50),
                                mean(DownstrokeT50), mean(VmaxUp), mean(VmaxDecay) ,bpm))
   }
   colnames(output) <- c('Peak (AU)','Min (AU)', 'F/Fn (Amplitude)', 'Upstroke T50 (ms)',
                         'Downstroke T50 (ms)', 'Vmax Up', 'Vmax Decay', 'BPM')
-  return(round(output,3))
+  ex_obj$results <- round(output, round_diget)
+  return(ex_obj)
 }
 
