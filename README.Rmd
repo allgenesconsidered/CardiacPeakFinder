@@ -3,7 +3,9 @@ title: "Examples With Peak Finder Script"
 author: "Michael Olvera"
 date: "June 10th, 2017"
 output:
-  html_document: default
+  html_document:
+    theme: spacelab
+    toc: yes
   pdf_document: default
 ---
 
@@ -82,7 +84,7 @@ The main functions are *analyzeExperiemnt()* and *runTestGraph()*. You can call 
 
   *   Beats per minute
   *   Amplitute
-  *   Upstroke and Downstroke T50
+  *   Upstroke and Downstroke T50, T85, and T90
   *   Vmax (Up and Decay)
 
 ```{r runTest1}
@@ -92,11 +94,11 @@ head(example.object$results)
 
 Individual readings can be called to a ploting funciton, for closer inspection of where the progrmaing is calling peaks, minimum values, etc. *runTestGraph()* can be called on the names of individual reading, or on the whole dataset (if the second argument is left blank). Down arrows indicate downstroke measurments, up arrows indicate upstroke measurments. The color key is as follows:
 
-  *   <span style="color:#4daf4a">Peak calls</span>
-  *   <span style="color:#e41a1c">Trough calls</span>
-  *   <span style="color:#984ea3">T50 reference point</span>
-  *   <span style="color:#ff7f00">T85 reference point</span>
-  *   <span style="color:#377eb8">T90 reference point</span>
+  *   <span style="color:#4daf4a">Peak calls (Green)</span>
+  *   <span style="color:#e41a1c">Trough calls (Red)</span>
+  *   <span style="color:#984ea3">T50 reference point (Purple)</span>
+  *   <span style="color:#ff7f00">T85 reference point (Orange)</span>
+  *   <span style="color:#377eb8">T90 reference point (Blue)</span>
 
 ```{r runTest2}
 runTestGraph(example.object, c("R2", "R6"))
