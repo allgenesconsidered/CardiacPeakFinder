@@ -16,8 +16,13 @@ readZiessData <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean'
 }
 
 #' Converts a cleaned CSV to an experiment object.
-dataframeToExperiment <- function(dataframe, timeIndex = 1){
+dataframeToExperiment <- function(dataframe, timeIndex = 1, smooth_fxn = FALSE,
+                                  smooth_n = 20){
   experiment = create_new_experiment()
+
+  if(smooth_fxn) dataframe[,-timeIndex] <- smoothData(dataframe[,-timeIndex],20)
+  dataframe <- dataframe[complete.cases(dataframe),]
+
   stopifnot(fullTimeTest(dataframe[,timeIndex]))
   experiment$time = dataframe[,timeIndex]
   dat_no_time = dataframe[,-timeIndex]
@@ -39,17 +44,11 @@ dataframeToExperiment <- function(dataframe, timeIndex = 1){
 analyzeExperiment <- function(ex_obj, round_diget = 3){
 
   if(class(ex_obj) != "experiment"){
-    return('Error: Please name the fist column Time')
+    return('Error: Convert to experiment object first.')
   }
-  output = data.frame(Peaks_Ave = numeric(0),
-                      Mins_Ave = numeric(0),
-                      FoverFn_Ave = numeric(0),
-                      DownstrokeT50_Ave = numeric(0),
-                      DownstrokeVel_Ave = numeric(0),
-                      UpstrokeT50_Ave = numeric(0),
-                      UpstrokeVel_Ave = numeric(0),
-                      BPM = numeric(0)
-  )
+
+
+  output = data.frame()
   for( i in 1:ncol(ex_obj$data)){
     n = ex_obj$names[i]
     sample = ex_obj$data[,i]
@@ -60,6 +59,7 @@ analyzeExperiment <- function(ex_obj, round_diget = 3){
     min_ave = mean(indexesToValues(sample, ex_obj$mins[[n]]))
     ex_obj$midsDown[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]])
     ex_obj$midsUp[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F)
+
     ex_obj$midsDown85[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]],midPoint = 0.85)
     ex_obj$midsUp85[[n]] =findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F,
                                    midPoint = 0.85)
@@ -72,49 +72,58 @@ analyzeExperiment <- function(ex_obj, round_diget = 3){
     UpstrokeT50 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsUp[[n]], Downstroke = F)
     VmaxDecay = findVmax(sample, ex_obj$time, ex_obj$peaks[[n]], ex_obj$mins[[n]])
 
+    DownstrokeT85 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsDown85[[n]])
+    UpstrokeT85 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsUp85[[n]], Downstroke = F)
+    DownstrokeT90 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsDown90[[n]])
+    UpstrokeT90 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsUp90[[n]], Downstroke = F)
+
     bpm = calcualteBPM(sample, ex_obj$time)
     output <- rbind(output , c(peak_ave , min_ave, (peak_ave/min_ave), mean(UpstrokeT50),
-                               mean(DownstrokeT50), mean(VmaxUp), mean(VmaxDecay) ,bpm))
+                               mean(DownstrokeT50), mean(UpstrokeT85), mean(DownstrokeT85),
+                               mean(UpstrokeT90), mean(DownstrokeT90), mean(VmaxUp),
+                               mean(VmaxDecay) ,bpm))
   }
   colnames(output) <- c('Peak (AU)','Min (AU)', 'F/Fn (Amplitude)', 'Upstroke T50 (ms)',
-                        'Downstroke T50 (ms)', 'Vmax Up', 'Vmax Decay', 'BPM')
+                        'Downstroke T50 (ms)', 'Upstroke T85 (ms)', 'Downstroke T85 (ms)',
+                        'Upstroke T90 (ms)', 'Downstroke T90 (ms)','Vmax Up', 'Vmax Decay', 'BPM')
   ex_obj$results <- round(output, round_diget)
   return(ex_obj)
 }
 
 runTestGraph <- function(exp_obj, name_of_column = exp_obj$names) {
   plot_indexes = which(exp_obj$names %in% name_of_column)
+  if(length(plot_indexes)==0) return("No columns selected, check spelling.")
   for(i in plot_indexes){
     sample = exp_obj$data[,i]
-    title =  paste0('Test on ', exp_obj$names[i])
+    title =  paste0('Values on ', exp_obj$names[i])
 
     plot(exp_obj$time, sample, type = 'l', col = 'steelblue',
          main = title, ylab = "Intensity", xlab = "Time (miliseconds)")
     abline(h = mean(sample), col = 'grey')
 
     for(j in exp_obj$peaks[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'forestgreen', pch = 16)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#4daf4a', pch = 21)
     }
     for(j in exp_obj$mins[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'red', pch = 16)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#e41a1c', pch = 21)
     }
     for(j in exp_obj$midsUp[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'purple', pch = 16)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#984ea3', pch = 24)
     }
     for(j in exp_obj$midsDown[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'purple', pch = 18)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#984ea3', pch = 25)
     }
     for(j in exp_obj$midsUp85[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'blue', pch = 16)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#ff7f00', pch = 24)
     }
     for(j in exp_obj$midsDown85[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'blue', pch = 18)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#ff7f00', pch = 25)
     }
     for(j in exp_obj$midsUp90[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'brown', pch = 16)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#377eb8', pch = 24)
     }
     for(j in exp_obj$midsDown90[i]){
-      points(x = exp_obj$time[j], y = sample[j], col = 'brown', pch = 18)
+      points(x = exp_obj$time[j], y = sample[j], bg = '#377eb8', pch = 25)
     }
   }
 }

@@ -60,10 +60,16 @@ str(example)
 
 As you can see above, all columns are of **type** numeric (**num**). Looking a the second row of the output, *$ Time* indicates the title of the column, then the datatype, followed by the first few data entries. 
 
-To analyze data, I have written a function to wrap the data in an object called *dataframeToExperiment()*. The 'experiment' object will hold all the intensity values, the time measurments, and all the computed readings. 
+To analyze data, I have written a function to wrap the data in an object called *dataframeToExperiment()*. The 'experiment' object will hold all the intensity values, the time measurments, and all the computed readings. Argument are:
+
+  *   dataframe : The data you are loading in.
+  *   timeIndex : The index of the 'Time' column.
+  *   smooth_fxn : Should the program smooth out noisy data.
+  *   smooth_n : If smooth_fxn is true, what n to use (sliding window average).
 
 ```{r exampleObject1}
-example.object <- dataframeToExperiment(dataframe =  example, timeIndex = 1)
+example.object <- dataframeToExperiment(dataframe =  example, timeIndex = 1,
+                                        smooth_fxn = T ,smooth_n = 50)
 
 print(example.object)
 ```
@@ -73,23 +79,34 @@ When the object is created, it will run a full test to try and detect errors in 
 ## Analysis
 
 The main functions are *analyzeExperiemnt()* and *runTestGraph()*. You can call *analyzerExperiment()* on you experiment object to get physiologically relivant data, including:
-- Beats per minute
-- Amplitute
-- Upstroke and Downstroke T50
-- Vmax (Up and Decay)
+
+  *   Beats per minute
+  *   Amplitute
+  *   Upstroke and Downstroke T50
+  *   Vmax (Up and Decay)
 
 ```{r runTest1}
 example.object <- analyzeExperiment(example.object)
 head(example.object$results)
 ```
 
-Individual readings can be called to a ploting funciton, for closer inspection of where the progrmaing is calling peaks, minimum values, etc. *runTestGraph()* can be called on the names of individual reading, or on the whole dataset (if the second argument is left blank).
+Individual readings can be called to a ploting funciton, for closer inspection of where the progrmaing is calling peaks, minimum values, etc. *runTestGraph()* can be called on the names of individual reading, or on the whole dataset (if the second argument is left blank). Down arrows indicate downstroke measurments, up arrows indicate upstroke measurments. The color key is as follows:
+
+  *   <span style="color:#4daf4a">Peak calls</span>
+  *   <span style="color:#e41a1c">Trough calls</span>
+  *   <span style="color:#984ea3">T50 reference point</span>
+  *   <span style="color:#ff7f00">T85 reference point</span>
+  *   <span style="color:#377eb8">T90 reference point</span>
 
 ```{r runTest2}
 runTestGraph(example.object, c("R2", "R6"))
 ```
 
-The output can be saved and extracted to be used in Excel/Prism. 
+
+
+## Export
+
+The results output can be saved and extracted to be used in Excel/Prism. 
 
 ```{r eval=F}
 

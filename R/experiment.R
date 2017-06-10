@@ -39,8 +39,15 @@ subset_intensity_data <- function(exp_dataset, grep_keyword='IntensityMean'){
   return(output)
 }
 
+smoothData <- function(x,n){
+  for(i in 1:ncol(x)){
+    x[,i] = moving_average(x[,i],n)
+  }
+  return(x)
+}
+
 #' Calculate moving averages to remove noise
-moving_average <- function(x,n=5){
+moving_average <- function(x,n){
   return(filter(x,rep(1/n,n), sides=2))
 }
 
