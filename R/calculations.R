@@ -1,9 +1,9 @@
 
 
-calcualteBPM <- function(listInt, listTime){ # Number of peaks per second
+calcualteBPM <- function(listInt, listTime){
   peaks = findPeaks(listInt)
   time = listTime[peaks[length(peaks)]] - listTime[peaks[1]]
-  return(length(peaks)/time * 1000 * 60)
+  return(length(peaks)/time * 1000 * 60) # Number of peaks per minute
 }
 
 calcualteT50 <- function(listTime, peaks, mids, Downstroke = T){
@@ -28,6 +28,8 @@ calculateVelocity <- function(listInt, listTime, midsIndex){
   return(vel)
 }
 
+#' Converts the indexes (useful for storage and ploting) to their coorisponging
+#' values within the list.
 indexesToValues <- function(list, indexes){
   values = c()
   for(i in indexes){

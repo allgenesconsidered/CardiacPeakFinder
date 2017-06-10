@@ -1,129 +1,41 @@
 source('./R/calculations.R')
 source('./R/errorChecking.R')
 source('./R/experiment.R')
+source('./R/finders.R')
 
-#' A funciton to identify peaks in beating GcAMP cells.
-#'
-#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
-#' @param alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
-#' @param returnValue : Boolean whether or not to return indexes or intensity values.
-#' @return  A vector of either indexes or intensity values coorisponding to peaks
-findPeaks <- function(list, alpha = 0.01, returnValue = F){
-  peaks = c()
-  pRange = length(list) * alpha
-  currentMax = 0
-  if(list[1] > mean(list)) findingPeak = F # If the data starts above the mean
-  else findingPeak = T
-  for(i in 1:length(list)){ # for every element (which we'll call i) in the list
-    if (findingPeak){
-      if(list[i] < mean(list)) next
-      else if(list[i] > currentMax) currentMax = list[i]
-      else if(list[i] < currentMax){
-        peaks = c(peaks, which(list == max(list[(i-pRange):(i+pRange)])))
-        # ^Take the max of the area, incase the peak is noisy
-        findingPeak = F
-      }
-    } else {
-      if(list[i] > mean(list)) next
-      else {
-        findingPeak = T
-        currentMax = 0
-      }
-    }
-  }
-  if(returnValue) return(indexesToValues(list, peaks))
-  else return(peaks)
+
+#' A funciton to handle loading in data from a Zies reading.
+#' Designed to remove the empty "Marker" column, any empty rows after
+#' importing into R, and removing rows that do not contain mean
+#' intensity values
+readZiessData <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
+  raw_dat <- read.csv(path_to_csv, header = T, stringsAsFactors = F)
+  raw_dat <- raw_dat[-1,-2] # Remove empty
+  time <- as.numeric(raw_dat[,time_index])
+  return(cbind(time,subset_intensity_data(raw_dat, grep_keyword)))
 }
 
-#' A funciton to identify minimal values between peaks (troughs).
-#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
-#' @param peaks : Index values coorisponding to peaks. Will run findPeaks() if nothing given.
-#' @param returnValue : Boolean whether or not to return indexes or intensity values.
-#' @return Returns a vector of either indexes or intensity values coorisponding to minimal values. It will
-#'   only look for minimal values between peaks, so nothing should be showing up before the index of
-#'   the first peak.
-findMins <- function(list, peaks = findPeaks(list), returnValue = F){
-  mins = c()
-  for(i in 1:(length(peaks))){
-    peak1 = peaks[i]
-    peak2 = peaks[i+1]
-    if(!is.na(peak2)){
-      getRange = list[peak1:peak2]
-      mins = c(mins, (which(getRange == min(getRange))+peak1))
-    } else {
-      return(mins)
+#' Converts a cleaned CSV to an experiment object.
+dataframeToExperiment <- function(dataframe, timeIndex = 1){
+  experiment = create_new_experiment()
+  stopifnot(fullTimeTest(dataframe[,timeIndex]))
+  experiment$time = dataframe[,timeIndex]
+  dat_no_time = dataframe[,-timeIndex]
+  for(i in 1:ncol(dat_no_time)){
+    test = fullTest(dat_no_time[,i])
+    if(is.logical(test)){
+      if(test) next
+    } else if(is.vector(test)){
+      dat_no_time[,i] = test
     }
   }
-  if(returnValue) return(indexesToValues(list, mins))
-  else return(mins)
+  experiment$data = dat_no_time
+  experiment$names = colnames(dat_no_time)
+
+  return(experiment)
 }
 
-#' A funciton to identify midpoints (T50) between peaks and troughs. Only the mid points between .
-#' Argunments :
-#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
-#' @param peaks : Index values coorisponding to peaks. Will run findPeaks() if nothing given.
-#' @param mins : Intex values coorisponding to troughs. Will run findMins() if nothing given.
-#' @return Returns a vector of indexes coorisponding to T50 values. It will only look for T50
-#'   values between peaks and troughs, so nothing should be showing up before the index of
-#'   the first peak or after the index of the last peak.
-findMids <- function(listInt, peaks = findPeaks(listInt), mins = findMins(listInt), Downstroke = T, midPoint = 0.5){
-  mids = c()
-  if(Downstroke){
-    lIndex = peaks
-    rIndex = mins
-  } else{
-    lIndex = mins
-    rIndex = peaks[-1]
-  }
-  for(i in 1:length(lIndex)){
-    if(!is.na(lIndex[i]) && !is.na(rIndex[i])){
-      range = listInt[lIndex[i]:rIndex[i]]
-      midVal = ceiling((listInt[lIndex[i]] + listInt[rIndex[i]])*midPoint)
-      mids = c(mids, (which(abs(range - midVal) == min(abs(range - midVal)))) + lIndex[i])
-    }
-  }
-  return(mids)
-}
-
-##############################
-########## Testing ###########
-##############################
-
-runTestGraph <- function(dat = read.csv("./data/CAHandUT1.csv")){
-  time = dat[,1]
-  detectTimeErrors(time)
-
-  for( i in 2:ncol(dat)){
-    sample = dat[,i]
-    title =  paste0('Test on ', colnames(dat)[i])
-
-    plot(time, sample, type = 'l', col = 'steelblue',
-         main = title, ylab = "Intensity (AU)",
-         xlab = "Time (miliseconds)")
-    abline(h = mean(sample), col = 'grey')
-    peaks = findPeaks(sample)
-    mins = findMins(sample, peaks)
-    for(i in peaks){
-      points(x = dat[i,1], y = sample[i], col = 'forestgreen', pch = 16)
-    }
-    for(i in mins){
-      points(x = dat[i,1], y = sample[i], col = 'red', pch = 16)
-    }
-    for(i in findMids(sample, peaks, mins)){
-      points(x = dat[i,1], y = sample[i], col = 'purple', pch = 16)
-    }
-    for(i in findMids(sample, peaks, mins, Downstroke = F)){
-      points(x = dat[i,1], y = sample[i], col = 'orange', pch = 16)
-    }
-    for(i in findVmax(sample, time, peaks, mins, returnIndexes = T)){
-      points(x = time[i], y = sample[i], col = 'gold1', pch = 16)
-    }
-    for(i in findVmax(sample, time, peaks, mins, Decay = F, returnIndexes = T)){
-      points(x = time[i], y = sample[i], col = 'blue', pch = 16)
-    }
-  }
-}
-
+#' Wrapper fuction for analyzing the experimental data.
 analyzeExperiment <- function(ex_obj, round_diget = 3){
 
   if(class(ex_obj) != "experiment"){
@@ -148,6 +60,9 @@ analyzeExperiment <- function(ex_obj, round_diget = 3){
     min_ave = mean(indexesToValues(sample, ex_obj$mins[[n]]))
     ex_obj$midsDown[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]])
     ex_obj$midsUp[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F)
+    ex_obj$midsDown90[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]],midPoint = 0.85)
+    ex_obj$midsUp90[[n]] =findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F,
+                                    midPoint = 0.85)
 
     DownstrokeT50 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsDown[[n]])
     VmaxUp = findVmax(sample, ex_obj$time, ex_obj$peaks[[n]], ex_obj$mins[[n]], Decay = F)
@@ -164,3 +79,33 @@ analyzeExperiment <- function(ex_obj, round_diget = 3){
   return(ex_obj)
 }
 
+runTestGraph <- function(exp_obj, name_of_column = exp_obj$names) {
+  plot_indexes = which(exp_obj$names %in% name_of_column)
+  for(i in plot_indexes){
+    sample = exp_obj$data[,i]
+    title =  paste0('Test on ', exp_obj$names[i])
+
+    plot(exp_obj$time, sample, type = 'l', col = 'steelblue',
+         main = title, ylab = "Intensity", xlab = "Time (miliseconds)")
+    abline(h = mean(sample), col = 'grey')
+
+    for(j in exp_obj$peaks[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'forestgreen', pch = 16)
+    }
+    for(j in exp_obj$mins[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'red', pch = 16)
+    }
+    for(j in exp_obj$midsUp[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'purple', pch = 16)
+    }
+    for(j in exp_obj$midsDown[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'purple', pch = 18)
+    }
+    for(j in exp_obj$midsUp90[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'blue', pch = 16)
+    }
+    for(j in exp_obj$midsDown90[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'blue', pch = 18)
+    }
+  }
+}
