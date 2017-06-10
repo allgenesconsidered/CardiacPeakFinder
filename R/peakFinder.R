@@ -99,8 +99,6 @@ runTestGraph <- function(exp_obj, name_of_column = exp_obj$names) {
 
     plot(exp_obj$time, sample, type = 'l', col = 'steelblue',
          main = title, ylab = "Intensity", xlab = "Time (miliseconds)")
-    abline(h = mean(sample), col = 'grey')
-
     for(j in exp_obj$peaks[i]){
       points(x = exp_obj$time[j], y = sample[j], bg = '#4daf4a', pch = 21)
     }
