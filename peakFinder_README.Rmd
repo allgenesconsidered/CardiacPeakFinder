@@ -3,8 +3,8 @@ title: "Examples With Peak Finder Script"
 author: "Michael Olvera"
 date: "September 8, 2016"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}

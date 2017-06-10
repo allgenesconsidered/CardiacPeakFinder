@@ -60,9 +60,12 @@ analyzeExperiment <- function(ex_obj, round_diget = 3){
     min_ave = mean(indexesToValues(sample, ex_obj$mins[[n]]))
     ex_obj$midsDown[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]])
     ex_obj$midsUp[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F)
-    ex_obj$midsDown90[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]],midPoint = 0.85)
+    ex_obj$midsDown85[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]],midPoint = 0.85)
+    ex_obj$midsUp85[[n]] =findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F,
+                                   midPoint = 0.85)
+    ex_obj$midsDown90[[n]] = findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]],midPoint = 0.9)
     ex_obj$midsUp90[[n]] =findMids(sample, ex_obj$peaks[[n]], ex_obj$mins[[n]], Downstroke = F,
-                                    midPoint = 0.85)
+                                    midPoint = 0.9)
 
     DownstrokeT50 = calcualteT50(ex_obj$time, ex_obj$peaks[[n]], ex_obj$midsDown[[n]])
     VmaxUp = findVmax(sample, ex_obj$time, ex_obj$peaks[[n]], ex_obj$mins[[n]], Decay = F)
@@ -101,11 +104,17 @@ runTestGraph <- function(exp_obj, name_of_column = exp_obj$names) {
     for(j in exp_obj$midsDown[i]){
       points(x = exp_obj$time[j], y = sample[j], col = 'purple', pch = 18)
     }
-    for(j in exp_obj$midsUp90[i]){
+    for(j in exp_obj$midsUp85[i]){
       points(x = exp_obj$time[j], y = sample[j], col = 'blue', pch = 16)
     }
-    for(j in exp_obj$midsDown90[i]){
+    for(j in exp_obj$midsDown85[i]){
       points(x = exp_obj$time[j], y = sample[j], col = 'blue', pch = 18)
+    }
+    for(j in exp_obj$midsUp90[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'brown', pch = 16)
+    }
+    for(j in exp_obj$midsDown90[i]){
+      points(x = exp_obj$time[j], y = sample[j], col = 'brown', pch = 18)
     }
   }
 }

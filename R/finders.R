@@ -71,7 +71,6 @@ findMids <- function(listInt, peaks = findPeaks(listInt), mins = findMins(listIn
     if(!is.na(peaks[i]) && !is.na(mins[i])){
       if(!Downstroke) {
         range = listInt[mins[i]:peaks[i]] # List of values
-        cat(range)
         modifier = mins[i]
       } else {
         range = listInt[peaks[i]:mins[i]] # List of values

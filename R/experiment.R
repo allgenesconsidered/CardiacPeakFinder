@@ -22,6 +22,8 @@ create_new_experiment <- function(){
     mins = list(),
     midsDown = list(),
     midsUp = list(),
+    midsDown85= list(),
+    midsUp85 = list(),
     midsDown90= list(),
     midsUp90 = list(),
     results = NULL
