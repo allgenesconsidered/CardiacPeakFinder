@@ -178,31 +178,31 @@ runTestGraph <- function(exp_obj, name_of_column = exp_obj$names) {
     sample = exp_obj$data[,i]
     title =  paste0('Values on ', exp_obj$names[i])
 
-    plot(exp_obj$time, sample, type = 'l', col = 'steelblue',
+    graphics::plot(exp_obj$time, sample, type = 'l', col = 'steelblue',
          main = title, ylab = "Intensity", xlab = "Time (miliseconds)")
     for(j in exp_obj$peaks[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#4daf4a', pch = 21)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#4daf4a', pch = 21)
     }
     for(j in exp_obj$mins[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#e41a1c', pch = 21)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#e41a1c', pch = 21)
     }
     for(j in exp_obj$midsUp[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#984ea3', pch = 24)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#984ea3', pch = 24)
     }
     for(j in exp_obj$midsDown[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#984ea3', pch = 25)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#984ea3', pch = 25)
     }
     for(j in exp_obj$midsUp85[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#ff7f00', pch = 24)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#ff7f00', pch = 24)
     }
     for(j in exp_obj$midsDown85[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#ff7f00', pch = 25)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#ff7f00', pch = 25)
     }
     for(j in exp_obj$midsUp90[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#377eb8', pch = 24)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#377eb8', pch = 24)
     }
     for(j in exp_obj$midsDown90[i]){
-      points(x = exp_obj$time[j], y = sample[j], bg = '#377eb8', pch = 25)
+      graphics::points(x = exp_obj$time[j], y = sample[j], bg = '#377eb8', pch = 25)
     }
   }
 }
