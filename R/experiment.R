@@ -33,11 +33,25 @@ create_new_experiment <- function(){
 }
 
 
+create_new_pacing_object <- function(){
+  new_pacing_object <- list(
+    names = vector(mode='character'),
+    time = vector(mode='numeric'),
+    data = data.frame(),
+    experiemnts.list = list(),
+    results = NULL
+  )
+  class(new_pacing_object) <- 'pacingsweep'
+  return(new_pacing_object)
+}
+
+
 #' greps the mean intensity values, or whatever othe values you want.
 subset_intensity_data <- function(exp_dataset, grep_keyword='IntensityMean'){
   output <- exp_dataset[,grep(grep_keyword,colnames(exp_dataset))]
   return(output)
 }
+
 
 smoothData <- function(x,n){
   for(i in 1:ncol(x)){

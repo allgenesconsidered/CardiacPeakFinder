@@ -6,9 +6,8 @@ checkTime <- function(listTime){
   return(all(diff(listTime) >= 0))
 }
 
-detectTimeErrors <- function(listTime, alpha = 2){
+detectTimeErrors <- function(listTime, alpha){
   nErrors = 0
-
   ran = mean(diff(listTime)) * alpha
 
   for(i in 1:(length(listTime)-1)){
@@ -19,8 +18,19 @@ detectTimeErrors <- function(listTime, alpha = 2){
       nErrors = nErrors + 1
     }
   }
+  return(nErrors)
+}
+
+fullTimeTest <- function(listTime, alpha){
+  if(!checkTime(listTime)){
+    cat('Error: Column specified does not look like the time measuement.')
+    return(F)
+  }
+  nErrors = detectTimeErrors(listTime, alpha)
   if(nErrors == 0){
-    return(T)}
+    cat("No timing errors detected.\n")
+    return(T)
+  } else cat (nErrors, " time errors detected.", sep = '')
   return(F)
 }
 
@@ -59,18 +69,6 @@ errorPrompt <- function(){
     if(responce == 'n') return(T)
     else if(responce =='y') return(F)
   }
-}
-
-fullTimeTest <- function(listTime){
-  if(!checkTime(listTime)){
-    cat('Error: Column specified does not look like the time measuement.')
-    return(F)
-  }
-  if(detectTimeErrors(listTime)){
-    cat("No timing errors detected.\n")
-    return(T)
-  } else cat (nErrors, " time detected.", sep = '')
-  return(F)
 }
 
 fullTest <- function(list){

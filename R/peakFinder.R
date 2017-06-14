@@ -3,29 +3,82 @@ source('./R/errorChecking.R')
 source('./R/experiment.R')
 source('./R/finders.R')
 
-
 #' A funciton to handle loading in data from a Zies reading.
 #' Designed to remove the empty "Marker" column, any empty rows after
 #' importing into R, and removing rows that do not contain mean
 #' intensity values
+#' @param path_to_csv A csv file containing data gathered from a Ziess experiment.
+#' @param time_index The index of the column containing all of the 'Time' data.
+#' @param grep_keyword The keyword passed to grep to fetch the colums for your
+#' particular experiment. By default, \code{grep_keyword} is set to 'IntensityMean', fetching
+#' columns containing mean intensity values.
+#' @return A formated dataframe.
+#'
+#' @export
 readZiessData <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
   raw_dat <- read.csv(path_to_csv, header = T, stringsAsFactors = F)
   raw_dat <- raw_dat[-1,-2] # Remove empty
-  time <- as.numeric(raw_dat[,time_index])
-  return(cbind(time,subset_intensity_data(raw_dat, grep_keyword)))
+  Time <- as.numeric(raw_dat[,time_index])
+  return(cbind(Time,subset_intensity_data(raw_dat, grep_keyword)))
+}
+
+#' A generic funciton to plot intensities over time The data should be cleaned, either
+#' maually or with \code{\link{readZiessData}} so that only the time and the data you
+#' care about are left. \code{plotRawData} will iterate through the rows, printing
+#' @param raw_data A dataframe containing the data you wish to plot.
+#' @param time_index The index of the column containing all of the 'Time' data.
+#' @return None
+#'
+#' @export
+plotRawData <- function(raw_data, time_index=1){
+  time = names(raw_data)[time_index]
+
+  for(i in names(raw_data)){
+    if(i == time) next
+    plot(raw_data[[time]], raw_data[[i]], main=i, type = 'l')
+    abline(h = mean(raw_data[[i]]))
+  }
 }
 
 #' Converts a cleaned CSV to an experiment object.
-dataframeToExperiment <- function(dataframe, timeIndex = 1, smooth_fxn = FALSE,
-                                  smooth_n = 20){
+#'
+#' The experiment object (an S3 object) will hold all the raw data as well as results. This
+#' function checks to make sure the following are true:
+#'
+#' * No NA's are contained in the data frame.
+#'
+#' * The time_index is assigned correctly, and no timeing errors are detected. Timing
+#' errors are defined as gaps in recording that exceed some threshold (defined as the
+#' median time multiplied by some alpha).
+#'
+#' * There are no extranious intensity values.
+#'
+#' The resulting object can be passed to the other funcitons in this program.
+#' @param raw_data A dataframe containing the data you wish to turn into an experiment
+#' object. You are welcome to subset the data before passing it in (ie \code{raw_data[,-c(2,5)]}
+#' to exclude the second and third column).
+#' @param time_index The index of the column containing all of the 'Time' data.
+#' @param smooth_fxn A Boolean (default \code{False}). Do you want the data, which may or may
+#' not be noisy, to be smoothed using a running average. Recommended.
+#' @param smooth_n A number to be passed to the running average function. n is the number
+#' of points to average at each window. Default is 20.
+#' @param timing_alpha A number to pass to the timing checker. This alpha is multiplied to the
+#' median of the differnces of each time measument. If a time measurment exceeds this threshold,
+#' an error is produced. The microscope may have stalled at this point, and furhter investigation is
+#' needed to check the data. Default is 2.
+#' @return An experiment object.
+#'
+#' @export
+dataframeToExperiment <- function(raw_data, time_index = 1, smooth_fxn = FALSE,
+                                  smooth_n = 20, timing_alpha = 2){
   experiment = create_new_experiment()
 
-  if(smooth_fxn) dataframe[,-timeIndex] <- smoothData(dataframe[,-timeIndex],20)
-  dataframe <- dataframe[complete.cases(dataframe),]
+  if(smooth_fxn) raw_data[,-time_index] <- smoothData(raw_data[,-time_index],20)
+  raw_data <- raw_data[complete.cases(raw_data),]
 
-  stopifnot(fullTimeTest(dataframe[,timeIndex]))
-  experiment$time = dataframe[,timeIndex]
-  dat_no_time = dataframe[,-timeIndex]
+  stopifnot(fullTimeTest(raw_data[,time_index], timing_alpha))
+  experiment$time = raw_data[,time_index]
+  dat_no_time = raw_data[,-time_index]
   for(i in 1:ncol(dat_no_time)){
     test = fullTest(dat_no_time[,i])
     if(is.logical(test)){
@@ -40,14 +93,30 @@ dataframeToExperiment <- function(dataframe, timeIndex = 1, smooth_fxn = FALSE,
   return(experiment)
 }
 
-#' Wrapper fuction for analyzing the experimental data.
+
+#' Analyzes the experimental data.
+#'
+#' \code{analyzeExperiment} takes in an experiment object, and
+#' returns physiological relivant data. This includes:
+#'
+#' * Peaks
+#' * Troughs (mins)
+#' * T50, T85, and T90
+#' * Vmax for upstrokes and downstrokes.
+#'
+#' TODO Pass the peakfinder alpha to this function.
+#'
+#' @param ex_obj The experimental object generated by \code{\link{dataframeToExperiment}}.
+#' @param round_diget How to round the results digets. Default is 3.
+#'
+#' @return An experiment object with a filled results table.
+#'
+#' @export
 analyzeExperiment <- function(ex_obj, round_diget = 3){
 
   if(class(ex_obj) != "experiment"){
     return('Error: Convert to experiment object first.')
   }
-
-
   output = data.frame()
   for( i in 1:ncol(ex_obj$data)){
     n = ex_obj$names[i]
@@ -90,6 +159,18 @@ analyzeExperiment <- function(ex_obj, round_diget = 3){
   return(ex_obj)
 }
 
+
+#' Graphs peak calls, troughs (mins), and T50, T85, and T90 reference points,
+#' color coaded and coded based on upstroke or downstroke values.
+#'
+#' @param exp_obj The experimental object generated by
+#' \code{\link{dataframeToExperiment}} and analyzed in \code{\link{analyzeExperiment}}.
+#' @param name_of_column A list or a string that matches the column names you wish to
+#' graph. Defalts to all columns.
+#'
+#' @return None
+#'
+#' @export
 runTestGraph <- function(exp_obj, name_of_column = exp_obj$names) {
   plot_indexes = which(exp_obj$names %in% name_of_column)
   if(length(plot_indexes)==0) return("No columns selected, check spelling.")
