@@ -15,7 +15,7 @@ source('./R/finders.R')
 #' @return A formated dataframe.
 #'
 #' @export
-readZiessData <-function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
+readZiessData <- function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
   raw_dat <- read.csv(path_to_csv, header = T, stringsAsFactors = F)
   raw_dat <- raw_dat[-1,-2] # Remove empty
   Time <- as.numeric(raw_dat[,time_index])
