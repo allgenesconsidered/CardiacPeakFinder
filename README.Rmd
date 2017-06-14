@@ -1,5 +1,5 @@
 ---
-title: "Examples With Peak Finder Script"
+title: "Examples With RCaMP"
 author: "Michael Olvera"
 date: "June 10th, 2017"
 output:
@@ -13,23 +13,26 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Using Peak Finder
+## Using RCaMP
 
-This is a quick guide on how to use the Peak Finder script. Feel free to follow along with the code in this file to make sure everything is working well. For this file, R code is in boxes, and outputs are boxes with **##** before the code.
+This is a quick guide on how to use the RCaMP package. Feel free to follow along with the code in this file to make sure everything is working well. For this file, R code is in boxes, and outputs are boxes with ## before the code.
 
-Before starting, include the following line of code at the top
-of your script:
+Before starting, include the following lines of code at the top of your script to load the package.
 
-```{r source}
-source("R/peakFinder.R")
+```{r source, results='hide',message=FALSE}
+install.packages('devtools', repos="http://cran.rstudio.com/")
+library(devtools)
+
+devtools::install_github('allgenesconsidered/RCaMP')
+library(RCaMP)
 ```
 
-## Loading data straight from the microscope.
+## Loading data straight from the microscope
 
 Data from a Ziess experiment incudes several metrics we are not interested in, as well as artifacts introduced by loading the data into R. Here is an example of raw data from the Ziess:
 
 ```{r loading1}
-raw_data <- read.csv(file = "./data/CMEC_75.25-1_5.16.17_1.csv")
+raw_data <- read.csv(file = "./data/CMEC_75_25-1_5_16_17_1.csv")
 colnames(raw_data) <- NULL
 head(raw_data)
 ```
@@ -37,7 +40,7 @@ head(raw_data)
 PeakFinder has a build in function to automatically clean the data, leaving only the mean intensity values. 
 
 ```{r loading2}
-raw_data <- readZiessData(path_to_csv = "./data/CMEC_75.25-1_5.16.17_1.csv", time_index = 1, grep_keyword = "IntensityMean")
+raw_data <- readZiessData(path_to_csv = "./data/CMEC_75_25-1_5_16_17_1.csv", time_index = 1, grep_keyword = "IntensityMean")
 colnames(raw_data) <- NULL
 head(raw_data)
 ```
@@ -70,7 +73,7 @@ To analyze data, I have written a function to wrap the data in an object called 
   *   smooth_n : If smooth_fxn is true, what n to use (sliding window average).
 
 ```{r exampleObject1}
-example.object <- dataframeToExperiment(dataframe =  example, timeIndex = 1,
+example.object <- dataframeToExperiment(raw_data =  example, time_index = 1,
                                         smooth_fxn = T ,smooth_n = 50)
 
 print(example.object)
