@@ -1,0 +1,9 @@
+Package: cardiacpeakfinder
+Version: 0.2
+Date: 2014-08-27
+Title: Cardiac Peak Finder
+Description: Finds peaks, troughs, and other physiological data from GcAMP recordings.
+Author: Michael Olvera <michael.olvera@gladstone.ucsf.edu>
+Maintainer: Michael Olvera <michael.olvera@gladstone.ucsf.edu>
+RoxygenNote: 6.0.1
+License: GPL-3
