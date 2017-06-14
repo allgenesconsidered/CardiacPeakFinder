@@ -1,15 +1,15 @@
-#' A funciton to identify peaks in beating GcAMP cells.
-#'
-#' Peaks are called by running through the intensity values and
-#' dipping below the median of all the values. If the trajectory is positive (moving up),
-#' then the program will continually look for the index until the slop does negative. It will
-#' then look for the max value around the place the slope becomes negative.
-#'
-#' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
-#' @param alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
-#' @param returnValue : Boolean whether or not to return indexes or intensity values.
-#' @return  A vector of either indexes or intensity values coorisponding to peaks.
-#'
+# A funciton to identify peaks in beating GcAMP cells.
+#
+# Peaks are called by running through the intensity values and
+# dipping below the median of all the values. If the trajectory is positive (moving up),
+# then the program will continually look for the index until the slop does negative. It will
+# then look for the max value around the place the slope becomes negative.
+#
+# @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
+# @param alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
+# @param returnValue : Boolean whether or not to return indexes or intensity values.
+# @return  A vector of either indexes or intensity values coorisponding to peaks.
+#
 findPeaks <- function(list, alpha = 0.01, returnValue = F){
   peaks = c()
   pRange = length(list) * alpha
