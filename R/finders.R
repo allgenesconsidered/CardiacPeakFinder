@@ -8,7 +8,8 @@
 #' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
 #' @param alpha : The % of the data to scan in both directions to find peaks. Defaults to 1%.
 #' @param returnValue : Boolean whether or not to return indexes or intensity values.
-#' @return  A vector of either indexes or intensity values coorisponding to peaks
+#' @return  A vector of either indexes or intensity values coorisponding to peaks.
+#'
 findPeaks <- function(list, alpha = 0.01, returnValue = F){
   peaks = c()
   pRange = length(list) * alpha
@@ -37,6 +38,11 @@ findPeaks <- function(list, alpha = 0.01, returnValue = F){
 }
 
 #' A funciton to identify minimal values between peaks (troughs).
+#'
+#' To call peaks, the function looks betwen peaks to identify the minimum value
+#' between the two. With this function, you can assume that the first call will
+#' always be a peak call.ins
+#'
 #' @param list  : A list of GcAMP intensity values coorisponding to an experiemntal run.
 #' @param peaks : Index values coorisponding to peaks. Will run findPeaks() if nothing given.
 #' @param returnValue : Boolean whether or not to return indexes or intensity values.

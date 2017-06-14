@@ -13,7 +13,9 @@ source('./R/errorChecking.R')
 #' measured value)
 #' data : A matrix containing the intenity values for each measured point
 #' results : a list containing all measured data
-create_new_experiment <- function(){
+#'
+#' @export
+create_new_rcamp <- function(){
   new_experiment <- list(
     names = vector(mode='character'),
     time = vector(mode='numeric'),
@@ -28,7 +30,7 @@ create_new_experiment <- function(){
     midsUp90 = list(),
     results = NULL
   )
-  class(new_experiment) <- 'experiment'
+  class(new_experiment) <- 'rcamp'
   return(new_experiment)
 }
 
@@ -67,7 +69,8 @@ moving_average <- function(x,n){
 
 
 #' Print function for experiement object
-print.experiment <- function(exp_obj){
+#' @export
+print.rcamp <- function(exp_obj){
   cat('Data names :',exp_obj$name,'\n')
   cat('Experimental object with', length(exp_obj$time),
       'measurments and', ncol(exp_obj$data) ,'positions.\n')
