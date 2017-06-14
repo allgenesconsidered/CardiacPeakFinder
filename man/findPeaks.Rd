@@ -14,7 +14,7 @@ findPeaks(list, alpha = 0.01, returnValue = F)
 \item{returnValue}{: Boolean whether or not to return indexes or intensity values.}
 }
 \value{
-A vector of either indexes or intensity values coorisponding to peaks
+A vector of either indexes or intensity values coorisponding to peaks.
 }
 \description{
 Peaks are called by running through the intensity values and

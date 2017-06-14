@@ -19,5 +19,7 @@ Returns a vector of either indexes or intensity values coorisponding to minimal 
   the first peak.
 }
 \description{
-A funciton to identify minimal values between peaks (troughs).
+To call peaks, the function looks betwen peaks to identify the minimum value
+between the two. With this function, you can assume that the first call will
+always be a peak call.ins
 }
