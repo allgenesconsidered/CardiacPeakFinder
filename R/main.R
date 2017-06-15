@@ -30,6 +30,35 @@ readZiessData <- function(path_to_csv, time_index=1, grep_keyword='IntensityMean
   return(cbind(Time,subset_intensity_data(raw_dat, grep_keyword)))
 }
 
+#' Trim seconds off the begining or end of a run
+#'
+#' Removes data from either end of a run. The value passed to \code{trim_start} will remove values
+#' from the left until the time matches \code{trim_start}. The value passed to \code{trim_end} will remove values
+#' from the right until the time matches \code{trim_end}. For instance, if my time was the vector
+#' \code{c(1,2,3,4,5,6,7)} and I passed \code{trim_start = 2} \code{trim_end = 5}, the output would be
+#' \code{c(2,3,4,5)}. Passing only \code{trim_start = 3} would output \code{c(3,4,5,6,7)}
+#'
+#' @param raw_data A dataframe containing the data you wish to plot.
+#' @param time_index The index of the column containing all of the 'Time' data.
+#' @param trim_start Time value to trim to, starting from the left. Default is no trimming.
+#' @param trim_end Time value to trim to, starting from the right. Default is no trimming.
+#'
+#' @export
+trimData <- function(raw_data, time_index,
+                     trim_start = raw_data[,time_index][1], trim_end = raw_data[,time_index][length(raw_data)]){
+
+  if(! raw_data[,time_index][1] <= trim_start && trim_start <= raw_data[,time_index][length(raw_data)]) stop("trim_start out of range.")
+  if(! raw_data[,time_index][1] <= trim_end && trim_end <= raw_data[,time_index][length(raw_data)]) stop("trim_end out of range.")
+
+  closest_match_start = which(abs(raw_data[,time_index] - trim_start) ==
+                                min(abs(raw_data[,time_index] - trim_start)))[1]
+  closest_match_end = which(abs(raw_data[,time_index] - trim_end) ==
+                                  min(abs(raw_data[,time_index] - trim_end)))[1]
+
+  return(raw_data[closest_match_start,closest_match_end])
+}
+
+
 #' A generic funciton to plot intensities over time The data should be cleaned, either
 #' maually or with \code{\link{readZiessData}} so that only the time and the data you
 #' care about are left. \code{plotRawData} will iterate through the rows, printing
