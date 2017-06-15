@@ -5,7 +5,8 @@
 \title{Converts a cleaned CSV to an rcamp object.}
 \usage{
 dataframeToRCaMP(raw_data, time_index = 1, smooth_fxn = FALSE,
-  smooth_n = 20, timing_alpha = 2)
+  smooth_n = 20, timing_alpha = 2, time_units = "miliseconds",
+  time_override = F)
 }
 \arguments{
 \item{raw_data}{A dataframe containing the data you wish to turn into an experiment

@@ -45,7 +45,7 @@ readZiessData <- function(path_to_csv, time_index=1, grep_keyword='IntensityMean
 #'
 #' @export
 trimData <- function(raw_data, time_index,
-                     trim_start = raw_data[,time_index][1], trim_end = raw_data[,time_index][length(raw_data)]){
+                     trim_start = raw_data[,time_index][1], trim_end = raw_data[,time_index][nrow(raw_data)]){
 
   if(! raw_data[,time_index][1] <= trim_start && trim_start <= raw_data[,time_index][length(raw_data)]) stop("trim_start out of range.")
   if(! raw_data[,time_index][1] <= trim_end && trim_end <= raw_data[,time_index][length(raw_data)]) stop("trim_end out of range.")
@@ -54,8 +54,8 @@ trimData <- function(raw_data, time_index,
                                 min(abs(raw_data[,time_index] - trim_start)))[1]
   closest_match_end = which(abs(raw_data[,time_index] - trim_end) ==
                                   min(abs(raw_data[,time_index] - trim_end)))[1]
-
-  return(raw_data[closest_match_start,closest_match_end])
+  print(closest_match_end)
+  return(raw_data[closest_match_start:closest_match_end,])
 }
 
 
@@ -114,7 +114,8 @@ dataframeToRCaMP <- function(raw_data, time_index = 1, smooth_fxn = FALSE,
   if(smooth_fxn) raw_data[,-time_index] <- smoothData(raw_data[,-time_index],20)
   raw_data <- raw_data[complete.cases(raw_data),]
 
-  stopifnot(fullTimeTest(raw_data[,time_index], timing_alpha, time_units, time_override))
+  stopifnot(fullTimeTest(raw_data[,time_index], timing_alpha))
+  raw_data[,time_index] = checkTimeUnits(raw_data[,time_index], time_units, time_override)
   rcamp$time = raw_data[,time_index]
   dat_no_time = raw_data[,-time_index]
   for(i in 1:ncol(dat_no_time)){

@@ -2,12 +2,10 @@
 % Please edit documentation in R/main.R
 \name{readZiessData}
 \alias{readZiessData}
-\title{A funciton to handle loading in data from a Zies reading.
-Designed to remove the empty "Marker" column, any empty rows after
-importing into R, and removing rows that do not contain mean
-intensity values}
+\title{A funciton to handle loading in data from a Zies reading.}
 \usage{
-readZiessData(path_to_csv, time_index = 1, grep_keyword = "IntensityMean")
+readZiessData(path_to_csv, time_index = 1, grep_keyword = "IntensityMean",
+  time_units = "miliseconds")
 }
 \arguments{
 \item{path_to_csv}{A csv file containing data gathered from a Ziess experiment.}
@@ -17,12 +15,13 @@ readZiessData(path_to_csv, time_index = 1, grep_keyword = "IntensityMean")
 \item{grep_keyword}{The keyword passed to grep to fetch the colums for your
 particular experiment. By default, \code{grep_keyword} is set to 'IntensityMean', fetching
 columns containing mean intensity values.}
+
+\item{time_units}{A string. Should be set to "seconds" or "miliseconds". Default to miliseconds.}
 }
 \value{
 A formated dataframe.
 }
 \description{
-A funciton to handle loading in data from a Zies reading.
 Designed to remove the empty "Marker" column, any empty rows after
 importing into R, and removing rows that do not contain mean
 intensity values

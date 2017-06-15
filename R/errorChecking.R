@@ -11,9 +11,11 @@ checkTimeUnits <- function( listTime, time_units, time_override){
   if(delta < 1 && time_units %in% c('m','miliseconds') && !time_override){
     stop(paste('Time measurments are', round(delta, digits = 4), 'units appart. This',
                'does not look like miliseconds. Aborting. Change time_units to',
-                'time_override to True to ignore this message.\n'))
+                '\'seconds\' or change time_override to True to ignore this message.\n'))
   }
-  if(time_units %in% c('s', 'seconds')) listTime = listTime * 1000
+  if(time_units %in% c('s', 'seconds')) {
+    listTime = listTime * 1000
+    }
   return(listTime)
 }
 
@@ -32,14 +34,11 @@ detectTimeErrors <- function(listTime, alpha){
   return(nErrors)
 }
 
-fullTimeTest <- function(listTime, alpha, time_units, time_override){
+fullTimeTest <- function(listTime, alpha){
   if(!checkTime(listTime)){
     cat('Error: Column specified does not look like the time measuement.')
     return(F)
   }
-
-  listTime = checkTimeUnits(listTime, time_units, time_override)
-
   nErrors = detectTimeErrors(listTime, alpha)
   if(nErrors != 0){
     warning(paste(nErrors, " time errors detected, the analysis may have stalled.", sep = ''))
