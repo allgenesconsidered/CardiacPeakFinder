@@ -4,21 +4,29 @@ source('./R/experiment.R')
 source('./R/finders.R')
 
 #' A funciton to handle loading in data from a Zies reading.
+#'
 #' Designed to remove the empty "Marker" column, any empty rows after
 #' importing into R, and removing rows that do not contain mean
 #' intensity values
+#'
 #' @param path_to_csv A csv file containing data gathered from a Ziess experiment.
 #' @param time_index The index of the column containing all of the 'Time' data.
 #' @param grep_keyword The keyword passed to grep to fetch the colums for your
 #' particular experiment. By default, \code{grep_keyword} is set to 'IntensityMean', fetching
 #' columns containing mean intensity values.
+#' @param time_units A string. Should be set to "seconds" or "miliseconds". Default to miliseconds.
+#'
 #' @return A formated dataframe.
 #'
 #' @export
-readZiessData <- function(path_to_csv, time_index=1, grep_keyword='IntensityMean'){
+readZiessData <- function(path_to_csv, time_index=1, grep_keyword='IntensityMean', time_units = "miliseconds"){
+
+  if(!time_units %in% c("miliseconds", "seconds", "m", "s"))
+    stop("Error: time_units must be either m, s, miniseconds, or seconds")
   raw_dat <- read.csv(path_to_csv, header = T, stringsAsFactors = F)
   raw_dat <- raw_dat[-1,-2] # Remove empty
   Time <- as.numeric(raw_dat[,time_index])
+  if(time_units %in% c("s", "seconds")) Time <- Time * 1000
   return(cbind(Time,subset_intensity_data(raw_dat, grep_keyword)))
 }
 
@@ -35,7 +43,8 @@ plotRawData <- function(raw_data, time_index=1){
 
   for(i in names(raw_data)){
     if(i == time) next
-    plot(raw_data[[time]], raw_data[[i]], main=i, type = 'l')
+    plot(raw_data[[time]], raw_data[[i]], main=i, type = 'l',
+        xlab = "Time", ylab = "Intensity (A.U.)")
     abline(h = mean(raw_data[[i]]))
   }
 }
@@ -70,13 +79,13 @@ plotRawData <- function(raw_data, time_index=1){
 #'
 #' @export
 dataframeToRCaMP <- function(raw_data, time_index = 1, smooth_fxn = FALSE,
-                                  smooth_n = 20, timing_alpha = 2){
+                                  smooth_n = 20, timing_alpha = 2, time_units = "miliseconds", time_override = F){
   rcamp = create_new_rcamp()
 
   if(smooth_fxn) raw_data[,-time_index] <- smoothData(raw_data[,-time_index],20)
   raw_data <- raw_data[complete.cases(raw_data),]
 
-  stopifnot(fullTimeTest(raw_data[,time_index], timing_alpha))
+  stopifnot(fullTimeTest(raw_data[,time_index], timing_alpha, time_units, time_override))
   rcamp$time = raw_data[,time_index]
   dat_no_time = raw_data[,-time_index]
   for(i in 1:ncol(dat_no_time)){
