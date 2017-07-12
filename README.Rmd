@@ -38,7 +38,7 @@ Data from a Ziess experiment incudes several metrics we are not interested in, a
 
 ```{r loading1}
 raw_data <- read.csv(file = "./data/CMEC_75_25-1_5_16_17_1.csv")
-colnames(raw_data) <- c("Time" ,paste("R",c(1:(ncol(raw_data)-1)),sep=""))
+colnames(raw_data) <- c("Time" ,paste("R",c(1:(ncol(raw_data)-1)),sep="")) # Changes colnames (Time, R1, R2, ... Rn)
 head(raw_data)
 ```
 
@@ -112,6 +112,30 @@ Individual readings can be called to a ploting funciton, for closer inspection o
 runTestGraph(example.object, c("R2", "R6"))
 ```
 
+## Subseting data
+
+Before the data is processed, you can subset the data using the  *trimData()* function.
+
+```{r graph_and_subset}
+example <- read.csv('data/CaHandUT1.csv')
+s <- example[,c(1,2)]
+plotRawData(s, time_index = 1)
+```
+
+If you wanted to subset the data to only include measurments before the error, you can run *trimData()* to remove sections from either the right or the left.
+
+```{r graph_and_subset_2}
+
+left_trim <- trimData(s,1,trim_start = 11000) # Trims from the left
+plot(x = left_trim$Time, y=left_trim$R1, type = 'l')
+```
+
+
+
+```{r graph_and_subset_3}
+right_trim <- trimData(s,1,trim_end = 10000) #Trims from the right
+plot(x =right_trim$Time, y=right_trim$R1, type = 'l')
+```
 
 
 ## Export

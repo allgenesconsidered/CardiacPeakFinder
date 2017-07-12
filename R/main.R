@@ -118,14 +118,7 @@ dataframeToRCaMP <- function(raw_data, time_index = 1, smooth_fxn = FALSE,
   raw_data[,time_index] = checkTimeUnits(raw_data[,time_index], time_units, time_override)
   rcamp$time = raw_data[,time_index]
   dat_no_time = raw_data[,-time_index]
-  for(i in 1:ncol(dat_no_time)){
-    test = fullTest(dat_no_time[,i])
-    if(is.logical(test)){
-      if(test) next
-    } else if(is.vector(test)){
-      dat_no_time[,i] = test
-    }
-  }
+
   rcamp$data = dat_no_time
   rcamp$names = colnames(dat_no_time)
 

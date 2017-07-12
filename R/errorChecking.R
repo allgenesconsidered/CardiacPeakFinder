@@ -46,35 +46,6 @@ fullTimeTest <- function(listTime, alpha){
   return(T)
 }
 
-detectRunErrors <- function(list){
-  for( i in 1:length(list)){
-    if(list[i] < 75 || list[i] > 700){
-      cat("Caution: Erronious intensity detected at index ", i ,'.\n', sep = '')
-      return(i)
-    }
-  }
-  return(F)
-}
-
-attemptPatch <- function(list, index){
-  tryCatch({
-    list[index] = mean(list[index + 1], list[index - 1])
-    cat("Patching Sucessfull!\n")
-    return(list)
-  }, error = function(e) {
-    cat("Patching failed.\n")
-    print(e)
-    if(errorPrompt()){
-      cat("Sample skipped\n")
-      return(T)
-    } else {
-      cat("Error not skipped\n")
-      return(F)
-    }
-  })
-  return(NA)
-}
-
 errorPrompt <- function(){
   while(T){
     responce <- readline(prompt="Include in analysis? [y/n]: ")
@@ -83,11 +54,3 @@ errorPrompt <- function(){
   }
 }
 
-fullTest <- function(list){
-  test <- detectRunErrors(list)
-  if(is.numeric(test)){
-    cat(prompt="Attempting fix.\n")
-    fix = attemptPatch(list, test)
-    return(fix)
-  } else return(test)
-}
